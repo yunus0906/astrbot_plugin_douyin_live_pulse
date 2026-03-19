@@ -361,3 +361,50 @@ class DouyinLivePulsePlugin(Star):
         """停止当前抖音开播监控"""
         await self.stop_monitor()
         yield event.plain_result("抖音直播监控任务已停止")
+
+    @filter.command("修改时间")
+    async def douyin_live_set_time(self, event: AstrMessageEvent):
+        """修改预计开播时间，格式：修改时间 HH:MM"""
+        # 取指令后面的参数部分
+        raw = event.message_str.strip()
+        # 兼容 "/修改时间 20:30" 和 "修改时间 20:30" 两种写法
+        parts = raw.lstrip("/").split(maxsplit=1)
+        if len(parts) < 2:
+            yield event.plain_result(
+                "❌ 格式错误，请使用：修改时间 HH:MM\n例如：修改时间 20:30"
+            )
+            return
+
+        new_time = parts[1].strip()
+
+        # 校验格式
+        try:
+            h, m = new_time.split(":")
+            h, m = int(h), int(m)
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                raise ValueError("时间超出范围")
+            # 统一格式为 HH:MM
+            new_time = f"{h:02d}:{m:02d}"
+        except Exception:
+            yield event.plain_result(
+                f"❌ 时间格式无效：{new_time}\n请使用 HH:MM 格式，例如：修改时间 20:30"
+            )
+            return
+
+        old_time = self.expected_live_time
+        self.expected_live_time = new_time
+
+        # 如果监控正在运行，重启以使新时间生效
+        was_running = self.monitor_task and not self.monitor_task.done()
+        if was_running:
+            await self.stop_monitor()
+            await self.start_monitor()
+            yield event.plain_result(
+                f"✅ 开播时间已更新：{old_time} → {new_time}\n"
+                f"监控任务已自动重启，新时间立即生效。"
+            )
+        else:
+            yield event.plain_result(
+                f"✅ 开播时间已更新：{old_time} → {new_time}\n"
+                f"（监控未运行，使用【启动开播监控】启动后生效）"
+            )
