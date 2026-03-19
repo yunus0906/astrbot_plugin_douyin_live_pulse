@@ -1,0 +1,50 @@
+{
+  "douyin_id": {
+    "description": "抖音直播间 ID，例如 https://live.douyin.com/123456 中的 123456",
+    "type": "string",
+    "hint": "直播间 ID：https://live.douyin.com/123456 → 123456",
+    "default": "123456"
+  },
+  "expected_live_time": {
+    "description": "预计开播时间，格式为 HH:MM",
+    "type": "string",
+    "hint": "例如 20:00",
+    "default": "20:00"
+  },
+  "watch_before_minutes": {
+    "description": "开播前几分钟开始守候",
+    "type": "int",
+    "hint": "例如 10",
+    "default": 10
+  },
+  "watch_after_minutes": {
+    "description": "超过预计开播时间几分钟后停止本轮监控",
+    "type": "int",
+    "hint": "例如 60",
+    "default": 60
+  },
+  "interval_min": {
+    "description": "轮询最小间隔（秒）",
+    "type": "int",
+    "hint": "建议不要过小，避免请求过于频繁",
+    "default": 45
+  },
+  "interval_max": {
+    "description": "轮询最大间隔（秒）",
+    "type": "int",
+    "hint": "应大于等于 interval_min",
+    "default": 90
+  },
+  "message_target": {
+    "description": "主动消息推送目标 unified_msg_origin",
+    "type": "string",
+    "hint": "例如 aiocqhttp:FriendMessage:123456789 或 aiocqhttp:GroupMessage:987654321",
+    "default": "aiocqhttp:FriendMessage:你的QQ号"
+  },
+  "auto_start": {
+    "description": "插件加载后是否自动开始监控",
+    "type": "bool",
+    "hint": "true 为自动启动，false 为手动使用指令启动",
+    "default": true
+  }
+}
