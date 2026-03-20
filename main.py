@@ -1,3 +1,4 @@
+
 import asyncio
 import json
 import os
@@ -86,7 +87,7 @@ def query_live(douyin_id: str, ttwid: str) -> dict:
             "https://live.douyin.com/webcast/room/web/enter/",
             headers={
                 "accept": "application/json, text/plain, */*",
-                "accept-encoding": "gzip, deflate, br",
+                "accept-encoding": "gzip, deflate",
                 "accept-language": "zh-CN,zh;q=0.9",
                 "cache-control": "no-cache",
                 "cookie": f"ttwid={ttwid}",
@@ -118,13 +119,21 @@ def query_live(douyin_id: str, ttwid: str) -> dict:
 
     if resp.status_code != 200:
         return {"ok": False, "reason": f"HTTP {resp.status_code}"}
-    if not resp.content:
+    content_type = (resp.headers.get("Content-Type") or "").lower()
+    body_text = (resp.text or "").strip()
+    if not body_text:
         return {"ok": False, "reason": "ttwid_expired"}
+    if "json" not in content_type and not body_text.startswith(("{", "[")):
+        return {"ok": False, "reason": "响应不是 JSON，可能是风控页或 ttwid 已失效"}
 
     try:
-        result = json.loads(resp.content.decode("utf-8"))
-    except Exception as e:
-        return {"ok": False, "reason": f"JSON 解析失败: {e}"}
+        result = resp.json()
+    except ValueError:
+        try:
+            result = json.loads(body_text)
+        except Exception as e:
+            preview = body_text[:120].replace("\n", " ").replace("\r", " ")
+            return {"ok": False, "reason": f"JSON 解析失败: {e}; 响应片段: {preview}"}
 
     if result.get("status_code") != 0:
         return {"ok": False, "reason": f"API 错误码 {result.get('status_code')}"}
@@ -169,7 +178,7 @@ def _in_window(expected: str, before: int, after: int) -> bool:
     return (base - before) <= cur <= (base + after)
 
 
-@register("astrbot_plugin_douyin_live_pulse", "cycle", "抖音直播开播监控插件", "1.0.0")
+@register("astrbot_plugin_douyin_live_pulse", "yunus", "抖音直播开播监控插件", "1.0.1")
 class DouyinLivePulsePlugin(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
