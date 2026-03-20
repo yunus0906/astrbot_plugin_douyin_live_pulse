@@ -182,9 +182,6 @@ def _in_window(expected: str, before: int, after: int) -> bool:
 class DouyinLivePulsePlugin(Star):
     def __init__(self, context: Context, config: dict = None):
         super().__init__(context)
-        # AstrBot 框架在实例化插件时会将用户在面板中填写的配置
-        # （经 _conf_schema.json 定义+默认值合并后）作为 config 参数传入。
-        # 直接从 config 读取，不再需要任何二次查找逻辑。
         self.config = config or {}
 
         self.douyin_id            = self.config.get("douyin_id", "123456")
